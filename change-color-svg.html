@@ -593,8 +593,8 @@
     }
 
     .preview svg .selected {
-      outline: 2px dashed var(--primary) !important;
-      outline-offset: 3px;
+      filter: drop-shadow(0 0 3px var(--primary)) drop-shadow(0 0 6px var(--primary)) !important;
+      opacity: 0.85;
     }
 
     .empty-state {
