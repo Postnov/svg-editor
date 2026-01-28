@@ -6,21 +6,35 @@
 - **JavaScript (ES6+)** — логика (DOM API, FileReader, Canvas, Clipboard API)
 - **Google Fonts** — шрифт Inter
 
-## Структура HTML
+## Структура HTML (v2.1)
 ```
-.svg-editor
-├── .svg-editor__header         # Логотип и заголовок
-├── .svg-editor__upload         # Зона загрузки (drag & drop)
-├── .svg-editor__main           # Основная область
-│   ├── .svg-editor__preview    # Превью SVG
-│   └── .svg-editor__sidebar    # Панель инструментов
-│       ├── Transform panel     # Поворот, отражение
-│       ├── Stroke panel        # Толщина обводки
-│       ├── Color panel         # Цвет, градиенты, палитра
-│       └── ViewBox panel       # Редактирование viewBox
-├── .svg-editor__export         # Кнопки экспорта
-├── .svg-editor__toast          # Уведомления
-└── .svg-editor__modal          # Модальные окна
+.editor                          # CSS Grid: 340px | 1fr
+├── .sidebar                     # Левая панель инструментов
+│   ├── .sidebar__header         # Логотип и заголовок
+│   ├── .upload-zone             # Зона загрузки (drag & drop)
+│   ├── .section (Режим)         # Режимы перекраски
+│   ├── .section (Цвет)          # Цвет, градиенты, палитра
+│   ├── .section (Трансформ)     # Поворот, отражение
+│   └── .section (Обводка)       # Толщина обводки
+│
+└── .main                        # Правая основная область
+    ├── .topbar                  # Кнопки экспорта и действий
+    │   ├── .filename            # Имя файла
+    │   └── .topbar__actions     # Кнопки (Copy, Base64, SVG, PNG dropdown)
+    │
+    └── .preview-area            # Область превью
+        ├── .preview-container   # Контейнер с шахматным фоном
+        │   ├── .preview         # SVG превью
+        │   ├── .viewbox-overlay # Рамка и ручки viewBox
+        │   └── .viewbox-info    # Информация о viewBox + кнопка редактирования
+        │
+        └── .selected-panel      # Панель выбранного элемента
+            ├── Color picker     # Индивидуальный выбор цвета
+            ├── Apply button     # Применить цвет
+            └── Delete button    # Удалить элемент
+
+.toast                           # Уведомления (fixed)
+.modal-overlay                   # Модальные окна
 ```
 
 ## Состояние приложения (State)
