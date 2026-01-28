@@ -529,6 +529,44 @@
       font-size: 0.875rem;
     }
 
+    /* ViewBox grid */
+    .svg-recolor__viewbox-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+
+    .svg-recolor__viewbox-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .svg-recolor__viewbox-label {
+      font-size: 0.6875rem;
+      color: var(--sr-gray-500);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .svg-recolor__viewbox-input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--sr-gray-200);
+      border-radius: var(--sr-border-radius);
+      font-size: 0.8125rem;
+      text-align: center;
+      background: white;
+      transition: all 0.2s ease;
+    }
+
+    .svg-recolor__viewbox-input:focus {
+      outline: none;
+      border-color: var(--sr-primary);
+      box-shadow: 0 0 0 3px var(--sr-primary-lighter);
+    }
+
     @media (max-width: 600px) {
       .svg-recolor {
         margin: 20px;
@@ -648,6 +686,28 @@
           </button>
         </div>
       </div>
+
+      <div class="svg-recolor__group">
+        <label class="svg-recolor__label">ViewBox (обрезка)</label>
+        <div class="svg-recolor__viewbox-grid">
+          <div class="svg-recolor__viewbox-field">
+            <span class="svg-recolor__viewbox-label">X</span>
+            <input type="number" id="sr-vb-x" class="svg-recolor__viewbox-input" value="0">
+          </div>
+          <div class="svg-recolor__viewbox-field">
+            <span class="svg-recolor__viewbox-label">Y</span>
+            <input type="number" id="sr-vb-y" class="svg-recolor__viewbox-input" value="0">
+          </div>
+          <div class="svg-recolor__viewbox-field">
+            <span class="svg-recolor__viewbox-label">W</span>
+            <input type="number" id="sr-vb-w" class="svg-recolor__viewbox-input" value="24" min="1">
+          </div>
+          <div class="svg-recolor__viewbox-field">
+            <span class="svg-recolor__viewbox-label">H</span>
+            <input type="number" id="sr-vb-h" class="svg-recolor__viewbox-input" value="24" min="1">
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="svg-recolor__preview-section">
@@ -712,6 +772,7 @@
   let flipH = false;
   let flipV = false;
   let strokeWidth = 2;
+  let viewBox = { x: 0, y: 0, w: 24, h: 24 };
 
   // Drag & drop
   ['dragenter', 'dragover'].forEach(evt => {
@@ -749,10 +810,37 @@
     reader.onload = e => {
       originalSvg = e.target.result;
       currentSvg = originalSvg;
+      initViewBox();
       applyColor();
       enableButtons(true);
     };
     reader.readAsText(file);
+  }
+
+  function initViewBox() {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(originalSvg, 'image/svg+xml');
+    const svg = doc.querySelector('svg');
+
+    if (svg) {
+      let vb = svg.getAttribute('viewBox');
+      if (vb) {
+        const parts = vb.split(/\s+/).map(Number);
+        viewBox = { x: parts[0] || 0, y: parts[1] || 0, w: parts[2] || 24, h: parts[3] || 24 };
+      } else {
+        const w = parseFloat(svg.getAttribute('width')) || 24;
+        const h = parseFloat(svg.getAttribute('height')) || 24;
+        viewBox = { x: 0, y: 0, w, h };
+      }
+      updateViewBoxInputs();
+    }
+  }
+
+  function updateViewBoxInputs() {
+    document.getElementById('sr-vb-x').value = viewBox.x;
+    document.getElementById('sr-vb-y').value = viewBox.y;
+    document.getElementById('sr-vb-w').value = viewBox.w;
+    document.getElementById('sr-vb-h').value = viewBox.h;
   }
 
   function enableButtons(enabled) {
@@ -796,12 +884,8 @@
       return;
     }
 
-    // Remove width/height for responsive preview, keep viewBox
-    if (!svg.getAttribute('viewBox')) {
-      const w = svg.getAttribute('width') || 100;
-      const h = svg.getAttribute('height') || 100;
-      svg.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
-    }
+    // Apply custom viewBox
+    svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
     svg.removeAttribute('width');
     svg.removeAttribute('height');
 
@@ -980,6 +1064,7 @@
     document.getElementById('sr-flip-v').classList.remove('svg-recolor__transform-btn--active');
     document.getElementById('sr-stroke-width').value = 2;
     document.getElementById('sr-stroke-value').value = 2;
+    initViewBox(); // Restore original viewBox
     applyColor();
   });
 
@@ -1020,6 +1105,17 @@
     strokeWidth = parseFloat(strokeInput.value) || 0;
     strokeSlider.value = Math.min(strokeWidth, 10);
     if (originalSvg) applyColor();
+  });
+
+  // ViewBox controls
+  ['sr-vb-x', 'sr-vb-y', 'sr-vb-w', 'sr-vb-h'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function() {
+      const key = id.split('-')[2]; // x, y, w, h
+      viewBox[key] = parseFloat(this.value) || 0;
+      if (viewBox.w < 1) viewBox.w = 1;
+      if (viewBox.h < 1) viewBox.h = 1;
+      if (originalSvg) applyColor();
+    });
   });
 
   function downloadBlob(blob, filename) {
