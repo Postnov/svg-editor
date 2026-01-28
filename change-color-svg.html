@@ -436,6 +436,50 @@
       font-weight: 500;
     }
 
+    /* Transform buttons */
+    .svg-recolor__transform-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .svg-recolor__transform-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--sr-gray-200);
+      border-radius: var(--sr-border-radius);
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .svg-recolor__transform-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--sr-gray-600);
+    }
+
+    .svg-recolor__transform-btn:hover {
+      border-color: var(--sr-primary-light);
+      background: var(--sr-primary-lighter);
+    }
+
+    .svg-recolor__transform-btn:hover svg {
+      color: var(--sr-primary);
+    }
+
+    .svg-recolor__transform-btn--active {
+      background: var(--sr-primary);
+      border-color: var(--sr-primary);
+    }
+
+    .svg-recolor__transform-btn--active svg {
+      color: white;
+    }
+
     @media (max-width: 600px) {
       .svg-recolor {
         margin: 20px;
@@ -515,6 +559,38 @@
           <input type="text" id="sr-color-text" class="svg-recolor__input" value="#2563EB">
         </div>
       </div>
+
+      <div class="svg-recolor__group">
+        <label class="svg-recolor__label">Трансформация</label>
+        <div class="svg-recolor__transform-group">
+          <button class="svg-recolor__transform-btn" id="sr-rotate-left" title="Повернуть влево на 90°">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="1 4 1 10 7 10"/>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+          </button>
+          <button class="svg-recolor__transform-btn" id="sr-rotate-right" title="Повернуть вправо на 90°">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+          <button class="svg-recolor__transform-btn" id="sr-flip-h" title="Отразить по горизонтали">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3"/>
+              <path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/>
+              <line x1="12" y1="3" x2="12" y2="21"/>
+            </svg>
+          </button>
+          <button class="svg-recolor__transform-btn" id="sr-flip-v" title="Отразить по вертикали">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 8V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3"/>
+              <path d="M3 16v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="svg-recolor__preview-section">
@@ -575,6 +651,9 @@
   let currentSvg = null;
   let currentFilename = 'icon';
   let currentMode = 'fill';
+  let rotation = 0;
+  let flipH = false;
+  let flipV = false;
 
   // Drag & drop
   ['dragenter', 'dragover'].forEach(evt => {
@@ -732,8 +811,50 @@
       }
     }
 
+    // Apply transforms
+    applyTransforms(svg);
+
     currentSvg = new XMLSerializer().serializeToString(svg);
     elements.preview.innerHTML = currentSvg;
+  }
+
+  function applyTransforms(svg) {
+    if (rotation === 0 && !flipH && !flipV) return;
+
+    // Get viewBox for center calculation
+    let vb = svg.getAttribute('viewBox');
+    if (!vb) return;
+
+    const parts = vb.split(/\s+/).map(Number);
+    const cx = parts[0] + parts[2] / 2;
+    const cy = parts[1] + parts[3] / 2;
+
+    const transforms = [];
+
+    // Apply rotation
+    if (rotation !== 0) {
+      transforms.push(`rotate(${rotation} ${cx} ${cy})`);
+    }
+
+    // Apply flip
+    if (flipH || flipV) {
+      const scaleX = flipH ? -1 : 1;
+      const scaleY = flipV ? -1 : 1;
+      transforms.push(`translate(${flipH ? parts[2] + 2 * parts[0] : 0} ${flipV ? parts[3] + 2 * parts[1] : 0})`);
+      transforms.push(`scale(${scaleX} ${scaleY})`);
+    }
+
+    if (transforms.length > 0) {
+      // Create wrapper group for transforms
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('transform', transforms.join(' '));
+
+      // Move all children to the group
+      while (svg.firstChild) {
+        g.appendChild(svg.firstChild);
+      }
+      svg.appendChild(g);
+    }
   }
 
   // Download SVG
@@ -776,7 +897,35 @@
   // Reset
   elements.resetBtn.addEventListener('click', () => {
     currentSvg = originalSvg;
+    rotation = 0;
+    flipH = false;
+    flipV = false;
+    document.getElementById('sr-flip-h').classList.remove('svg-recolor__transform-btn--active');
+    document.getElementById('sr-flip-v').classList.remove('svg-recolor__transform-btn--active');
     applyColor();
+  });
+
+  // Transform buttons
+  document.getElementById('sr-rotate-left').addEventListener('click', () => {
+    rotation = (rotation - 90 + 360) % 360;
+    if (originalSvg) applyColor();
+  });
+
+  document.getElementById('sr-rotate-right').addEventListener('click', () => {
+    rotation = (rotation + 90) % 360;
+    if (originalSvg) applyColor();
+  });
+
+  document.getElementById('sr-flip-h').addEventListener('click', function() {
+    flipH = !flipH;
+    this.classList.toggle('svg-recolor__transform-btn--active', flipH);
+    if (originalSvg) applyColor();
+  });
+
+  document.getElementById('sr-flip-v').addEventListener('click', function() {
+    flipV = !flipV;
+    this.classList.toggle('svg-recolor__transform-btn--active', flipV);
+    if (originalSvg) applyColor();
   });
 
   function downloadBlob(blob, filename) {
