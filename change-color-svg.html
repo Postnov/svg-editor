@@ -567,6 +567,125 @@
       box-shadow: 0 0 0 3px var(--sr-primary-lighter);
     }
 
+    /* Element selection */
+    .svg-recolor__preview svg *:hover {
+      cursor: pointer;
+      filter: brightness(1.1);
+    }
+
+    .svg-recolor__preview svg .sr-selected {
+      outline: 2px dashed var(--sr-primary) !important;
+      outline-offset: 2px;
+    }
+
+    .svg-recolor__selected-info {
+      margin-top: 1rem;
+      padding: 0.875rem;
+      background: var(--sr-primary-lighter);
+      border-radius: var(--sr-border-radius);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      display: none;
+    }
+
+    .svg-recolor__selected-info.visible {
+      display: block;
+    }
+
+    .svg-recolor__selected-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .svg-recolor__selected-tag {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--sr-primary);
+    }
+
+    .svg-recolor__selected-tag code {
+      background: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .svg-recolor__selected-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .svg-recolor__selected-btn {
+      padding: 0.5rem 0.875rem;
+      border: none;
+      border-radius: var(--sr-border-radius);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s ease;
+    }
+
+    .svg-recolor__selected-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .svg-recolor__selected-btn--delete {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .svg-recolor__selected-btn--delete:hover {
+      background: #fecaca;
+    }
+
+    .svg-recolor__selected-btn--color {
+      background: white;
+      color: var(--sr-gray-700);
+      border: 1px solid var(--sr-gray-200);
+    }
+
+    .svg-recolor__selected-btn--color:hover {
+      border-color: var(--sr-primary);
+      color: var(--sr-primary);
+    }
+
+    /* Toast notification */
+    .svg-recolor__toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 0.875rem 1.25rem;
+      background: var(--sr-gray-900);
+      color: white;
+      border-radius: var(--sr-border-radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      z-index: 1000;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .svg-recolor__toast.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .svg-recolor__toast svg {
+      width: 18px;
+      height: 18px;
+      color: #10b981;
+    }
+
     @media (max-width: 600px) {
       .svg-recolor {
         margin: 20px;
@@ -717,7 +836,30 @@
           <span class="svg-recolor__empty">SVG не загружен</span>
         </div>
       </div>
+
+      <!-- Selected element info -->
+      <div class="svg-recolor__selected-info" id="sr-selected-info">
+        <div class="svg-recolor__selected-header">
+          <span class="svg-recolor__selected-tag">Выбран: <code id="sr-selected-tag"></code></span>
+        </div>
+        <div class="svg-recolor__selected-actions">
+          <button class="svg-recolor__selected-btn svg-recolor__selected-btn--color" id="sr-color-element">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Перекрасить
+          </button>
+          <button class="svg-recolor__selected-btn svg-recolor__selected-btn--delete" id="sr-delete-element">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Удалить
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="svg-recolor__toast" id="sr-toast">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="sr-toast-text">Элемент удалён</span>
   </div>
 
   <div class="svg-recolor__divider"></div>
@@ -773,6 +915,7 @@
   let flipV = false;
   let strokeWidth = 2;
   let viewBox = { x: 0, y: 0, w: 24, h: 24 };
+  let selectedElement = null;
 
   // Drag & drop
   ['dragenter', 'dragover'].forEach(evt => {
@@ -961,6 +1104,9 @@
 
     currentSvg = new XMLSerializer().serializeToString(svg);
     elements.preview.innerHTML = currentSvg;
+
+    // Setup element selection after rendering
+    setupElementSelection();
   }
 
   function applyStrokeWidth(svg) {
@@ -1117,6 +1263,91 @@
       if (originalSvg) applyColor();
     });
   });
+
+  // Element selection
+  function setupElementSelection() {
+    const svgEl = elements.preview.querySelector('svg');
+    if (!svgEl) return;
+
+    const selectableEls = svgEl.querySelectorAll('path, rect, circle, ellipse, polygon, polyline, line, text, g');
+
+    selectableEls.forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+
+        // Remove previous selection
+        svgEl.querySelectorAll('.sr-selected').forEach(s => s.classList.remove('sr-selected'));
+
+        // Select this element
+        el.classList.add('sr-selected');
+        selectedElement = el;
+
+        document.getElementById('sr-selected-tag').textContent = `<${el.tagName.toLowerCase()}>`;
+        document.getElementById('sr-selected-info').classList.add('visible');
+      });
+    });
+
+    // Click outside to deselect
+    elements.preview.addEventListener('click', (e) => {
+      if (e.target === elements.preview || e.target === svgEl) {
+        deselectElement();
+      }
+    });
+  }
+
+  function deselectElement() {
+    const svgEl = elements.preview.querySelector('svg');
+    if (svgEl) {
+      svgEl.querySelectorAll('.sr-selected').forEach(s => s.classList.remove('sr-selected'));
+    }
+    selectedElement = null;
+    document.getElementById('sr-selected-info').classList.remove('visible');
+  }
+
+  // Delete selected element
+  document.getElementById('sr-delete-element').addEventListener('click', () => {
+    if (!selectedElement) return;
+
+    selectedElement.remove();
+    selectedElement = null;
+    document.getElementById('sr-selected-info').classList.remove('visible');
+
+    // Update currentSvg
+    const svgEl = elements.preview.querySelector('svg');
+    if (svgEl) {
+      currentSvg = new XMLSerializer().serializeToString(svgEl);
+    }
+
+    showToast('Элемент удалён');
+  });
+
+  // Color selected element
+  document.getElementById('sr-color-element').addEventListener('click', () => {
+    if (!selectedElement) return;
+
+    const color = elements.colorPicker.value;
+    selectedElement.setAttribute('fill', color);
+    if (selectedElement.getAttribute('stroke') && selectedElement.getAttribute('stroke') !== 'none') {
+      selectedElement.setAttribute('stroke', color);
+    }
+
+    // Update currentSvg
+    const svgEl = elements.preview.querySelector('svg');
+    if (svgEl) {
+      currentSvg = new XMLSerializer().serializeToString(svgEl);
+    }
+
+    showToast('Цвет применён');
+  });
+
+  // Toast notification
+  function showToast(text) {
+    const toast = document.getElementById('sr-toast');
+    const toastText = document.getElementById('sr-toast-text');
+    toastText.textContent = text;
+    toast.classList.add('visible');
+    setTimeout(() => toast.classList.remove('visible'), 2500);
+  }
 
   function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
