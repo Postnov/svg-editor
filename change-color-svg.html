@@ -785,6 +785,126 @@
       color: var(--sr-gray-400);
     }
 
+    /* Color mode toggle */
+    .svg-recolor__color-mode {
+      display: flex;
+      gap: 0.375rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .svg-recolor__color-mode-btn {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid var(--sr-gray-200);
+      border-radius: var(--sr-border-radius);
+      background: white;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--sr-gray-600);
+      transition: all 0.2s ease;
+    }
+
+    .svg-recolor__color-mode-btn:hover {
+      border-color: var(--sr-primary-light);
+    }
+
+    .svg-recolor__color-mode-btn--active {
+      background: var(--sr-primary);
+      color: white;
+      border-color: var(--sr-primary);
+    }
+
+    /* Gradient controls */
+    .svg-recolor__gradient-controls {
+      display: none;
+    }
+
+    .svg-recolor__gradient-controls.visible {
+      display: block;
+    }
+
+    .svg-recolor__gradient-type {
+      display: flex;
+      gap: 0.375rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .svg-recolor__gradient-type-btn {
+      flex: 1;
+      padding: 0.375rem 0.5rem;
+      border: 1px solid var(--sr-gray-200);
+      border-radius: var(--sr-border-radius-sm, 6px);
+      background: white;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--sr-gray-600);
+      transition: all 0.2s ease;
+    }
+
+    .svg-recolor__gradient-type-btn--active {
+      background: var(--sr-gray-100);
+      color: var(--sr-gray-900);
+      border-color: var(--sr-gray-300);
+    }
+
+    .svg-recolor__gradient-preview {
+      height: 36px;
+      border-radius: var(--sr-border-radius);
+      margin-bottom: 0.75rem;
+      border: 1px solid var(--sr-gray-200);
+    }
+
+    .svg-recolor__gradient-stops {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .svg-recolor__gradient-stop {
+      flex: 1;
+      text-align: center;
+    }
+
+    .svg-recolor__gradient-stop-label {
+      font-size: 0.6875rem;
+      color: var(--sr-gray-500);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .svg-recolor__gradient-stop input[type="color"] {
+      width: 100%;
+      height: 36px;
+      border: none;
+      border-radius: var(--sr-border-radius);
+      cursor: pointer;
+      box-shadow: var(--sr-shadow-sm);
+    }
+
+    .svg-recolor__gradient-stop input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .svg-recolor__gradient-stop input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: var(--sr-border-radius);
+    }
+
+    .svg-recolor__gradient-angle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .svg-recolor__gradient-angle-label {
+      font-size: 0.75rem;
+      color: var(--sr-gray-600);
+      font-weight: 500;
+    }
+
     @media (max-width: 600px) {
       .svg-recolor {
         margin: 20px;
@@ -856,14 +976,21 @@
       </div>
 
       <div class="svg-recolor__group">
-        <label class="svg-recolor__label" for="sr-color">Новый цвет</label>
-        <div class="svg-recolor__color-group">
-          <div class="svg-recolor__color-picker-wrapper">
-            <input type="color" id="sr-color" class="svg-recolor__color-picker" value="#2563eb">
-          </div>
-          <input type="text" id="sr-color-text" class="svg-recolor__input" value="#2563EB">
+        <label class="svg-recolor__label">Тип заливки</label>
+        <div class="svg-recolor__color-mode">
+          <button class="svg-recolor__color-mode-btn svg-recolor__color-mode-btn--active" data-mode="solid">Сплошной</button>
+          <button class="svg-recolor__color-mode-btn" data-mode="gradient">Градиент</button>
         </div>
-        <div class="svg-recolor__palette" id="sr-palette">
+
+        <!-- Solid color controls -->
+        <div id="sr-solid-controls">
+          <div class="svg-recolor__color-group">
+            <div class="svg-recolor__color-picker-wrapper">
+              <input type="color" id="sr-color" class="svg-recolor__color-picker" value="#2563eb">
+            </div>
+            <input type="text" id="sr-color-text" class="svg-recolor__input" value="#2563EB">
+          </div>
+          <div class="svg-recolor__palette" id="sr-palette">
           <div class="svg-recolor__palette-color svg-recolor__palette-color--active" style="background: #2563eb" data-color="#2563eb"></div>
           <div class="svg-recolor__palette-color" style="background: #7c3aed" data-color="#7c3aed"></div>
           <div class="svg-recolor__palette-color" style="background: #db2777" data-color="#db2777"></div>
@@ -875,6 +1002,31 @@
           <button class="svg-recolor__palette-add" id="sr-add-color" title="Добавить цвет">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
+        </div>
+        </div>
+
+        <!-- Gradient controls -->
+        <div id="sr-gradient-controls" class="svg-recolor__gradient-controls">
+          <div class="svg-recolor__gradient-type">
+            <button class="svg-recolor__gradient-type-btn svg-recolor__gradient-type-btn--active" data-type="linear">Линейный</button>
+            <button class="svg-recolor__gradient-type-btn" data-type="radial">Радиальный</button>
+          </div>
+          <div class="svg-recolor__gradient-preview" id="sr-gradient-preview"></div>
+          <div class="svg-recolor__gradient-stops">
+            <div class="svg-recolor__gradient-stop">
+              <div class="svg-recolor__gradient-stop-label">Начало</div>
+              <input type="color" id="sr-grad-start" value="#2563eb">
+            </div>
+            <div class="svg-recolor__gradient-stop">
+              <div class="svg-recolor__gradient-stop-label">Конец</div>
+              <input type="color" id="sr-grad-end" value="#7c3aed">
+            </div>
+          </div>
+          <div class="svg-recolor__gradient-angle" id="sr-angle-controls">
+            <span class="svg-recolor__gradient-angle-label">Угол:</span>
+            <input type="range" id="sr-grad-angle" class="svg-recolor__slider" min="0" max="360" value="135" style="flex: 1;">
+            <input type="number" id="sr-grad-angle-value" class="svg-recolor__input svg-recolor__input--small" min="0" max="360" value="135">
+          </div>
         </div>
       </div>
 
@@ -1051,6 +1203,9 @@
   let strokeWidth = 2;
   let viewBox = { x: 0, y: 0, w: 24, h: 24 };
   let selectedElement = null;
+  let colorMode = 'solid'; // solid or gradient
+  let gradientType = 'linear'; // linear or radial
+  let gradientAngle = 135;
 
   // Drag & drop
   ['dragenter', 'dragover'].forEach(evt => {
@@ -1194,12 +1349,90 @@
     showToast('Цвет добавлен в палитру');
   });
 
+  // Color mode toggle (solid/gradient)
+  document.querySelectorAll('.svg-recolor__color-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.svg-recolor__color-mode-btn').forEach(b => {
+        b.classList.remove('svg-recolor__color-mode-btn--active');
+      });
+      btn.classList.add('svg-recolor__color-mode-btn--active');
+      colorMode = btn.dataset.mode;
+
+      document.getElementById('sr-solid-controls').style.display = colorMode === 'solid' ? 'block' : 'none';
+      document.getElementById('sr-gradient-controls').classList.toggle('visible', colorMode === 'gradient');
+
+      if (colorMode === 'gradient') {
+        updateGradientPreview();
+      }
+      if (originalSvg) applyColor();
+    });
+  });
+
+  // Gradient type toggle
+  document.querySelectorAll('.svg-recolor__gradient-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.svg-recolor__gradient-type-btn').forEach(b => {
+        b.classList.remove('svg-recolor__gradient-type-btn--active');
+      });
+      btn.classList.add('svg-recolor__gradient-type-btn--active');
+      gradientType = btn.dataset.type;
+
+      // Show/hide angle controls for linear gradient
+      document.getElementById('sr-angle-controls').style.display = gradientType === 'linear' ? 'flex' : 'none';
+
+      updateGradientPreview();
+      if (originalSvg) applyColor();
+    });
+  });
+
+  // Gradient color inputs
+  const gradStart = document.getElementById('sr-grad-start');
+  const gradEnd = document.getElementById('sr-grad-end');
+  const gradAngleSlider = document.getElementById('sr-grad-angle');
+  const gradAngleInput = document.getElementById('sr-grad-angle-value');
+
+  [gradStart, gradEnd].forEach(input => {
+    input.addEventListener('input', () => {
+      updateGradientPreview();
+      if (originalSvg) applyColor();
+    });
+  });
+
+  gradAngleSlider.addEventListener('input', () => {
+    gradientAngle = parseInt(gradAngleSlider.value);
+    gradAngleInput.value = gradientAngle;
+    updateGradientPreview();
+    if (originalSvg) applyColor();
+  });
+
+  gradAngleInput.addEventListener('input', () => {
+    gradientAngle = parseInt(gradAngleInput.value) || 0;
+    gradAngleSlider.value = gradientAngle;
+    updateGradientPreview();
+    if (originalSvg) applyColor();
+  });
+
+  function updateGradientPreview() {
+    const preview = document.getElementById('sr-gradient-preview');
+    const start = gradStart.value;
+    const end = gradEnd.value;
+
+    if (gradientType === 'linear') {
+      preview.style.background = `linear-gradient(${gradientAngle}deg, ${start}, ${end})`;
+    } else {
+      preview.style.background = `radial-gradient(circle, ${start}, ${end})`;
+    }
+  }
+
+  // Initialize gradient preview
+  updateGradientPreview();
+
   function applyColor() {
-    const color = elements.colorPicker.value;
+    const solidColor = elements.colorPicker.value;
     const parser = new DOMParser();
     const doc = parser.parseFromString(originalSvg, 'image/svg+xml');
     const svg = doc.querySelector('svg');
-    
+
     if (!svg) {
       elements.preview.innerHTML = '<span class="svg-recolor__empty">Ошибка парсинга SVG</span>';
       return;
@@ -1209,6 +1442,58 @@
     svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
     svg.removeAttribute('width');
     svg.removeAttribute('height');
+
+    // Determine color value (solid or gradient reference)
+    let color = solidColor;
+
+    if (colorMode === 'gradient') {
+      // Remove old gradient defs
+      const oldDefs = svg.querySelector('defs#sr-gradient-defs');
+      if (oldDefs) oldDefs.remove();
+
+      // Create gradient definition
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      defs.id = 'sr-gradient-defs';
+
+      const gradId = 'sr-grad';
+      let grad;
+
+      if (gradientType === 'linear') {
+        grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+        const angle = gradientAngle;
+        const rad = (angle - 90) * Math.PI / 180;
+        const x1 = 50 + 50 * Math.cos(rad + Math.PI);
+        const y1 = 50 + 50 * Math.sin(rad + Math.PI);
+        const x2 = 50 + 50 * Math.cos(rad);
+        const y2 = 50 + 50 * Math.sin(rad);
+        grad.setAttribute('x1', x1 + '%');
+        grad.setAttribute('y1', y1 + '%');
+        grad.setAttribute('x2', x2 + '%');
+        grad.setAttribute('y2', y2 + '%');
+      } else {
+        grad = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient');
+        grad.setAttribute('cx', '50%');
+        grad.setAttribute('cy', '50%');
+        grad.setAttribute('r', '50%');
+      }
+
+      grad.id = gradId;
+
+      const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+      stop1.setAttribute('offset', '0%');
+      stop1.setAttribute('stop-color', document.getElementById('sr-grad-start').value);
+
+      const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+      stop2.setAttribute('offset', '100%');
+      stop2.setAttribute('stop-color', document.getElementById('sr-grad-end').value);
+
+      grad.appendChild(stop1);
+      grad.appendChild(stop2);
+      defs.appendChild(grad);
+      svg.insertBefore(defs, svg.firstChild);
+
+      color = `url(#${gradId})`;
+    }
 
     const allElements = svg.querySelectorAll('*');
     
