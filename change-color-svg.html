@@ -881,6 +881,13 @@
       </svg>
       Скачать PNG
     </button>
+    <button id="sr-copy-svg" class="svg-recolor__btn svg-recolor__btn--secondary" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      Копировать
+    </button>
     <button id="sr-reset" class="svg-recolor__btn svg-recolor__btn--secondary" disabled>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="1 4 1 10 7 10"/>
@@ -902,6 +909,7 @@
     preview: document.getElementById('sr-preview'),
     downloadSvg: document.getElementById('sr-download-svg'),
     downloadPng: document.getElementById('sr-download-png'),
+    copySvg: document.getElementById('sr-copy-svg'),
     resetBtn: document.getElementById('sr-reset'),
     modeBtns: document.querySelectorAll('.svg-recolor__mode-btn')
   };
@@ -989,6 +997,7 @@
   function enableButtons(enabled) {
     elements.downloadSvg.disabled = !enabled;
     elements.downloadPng.disabled = !enabled;
+    elements.copySvg.disabled = !enabled;
     elements.resetBtn.disabled = !enabled;
   }
 
@@ -1166,6 +1175,23 @@
   elements.downloadSvg.addEventListener('click', () => {
     const blob = new Blob([currentSvg], { type: 'image/svg+xml' });
     downloadBlob(blob, `${currentFilename}-recolored.svg`);
+  });
+
+  // Copy SVG to clipboard
+  elements.copySvg.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(currentSvg);
+      showToast('SVG скопирован в буфер');
+    } catch (err) {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = currentSvg;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast('SVG скопирован в буфер');
+    }
   });
 
   // Download PNG
