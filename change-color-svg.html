@@ -593,8 +593,11 @@
     }
 
     .preview svg .selected {
-      filter: drop-shadow(0 0 3px var(--primary)) drop-shadow(0 0 6px var(--primary)) !important;
-      opacity: 0.85;
+      filter:
+        drop-shadow(2px 0 0 #ff3366)
+        drop-shadow(-2px 0 0 #ff3366)
+        drop-shadow(0 2px 0 #ff3366)
+        drop-shadow(0 -2px 0 #ff3366);
     }
 
     .empty-state {
@@ -664,12 +667,17 @@
       margin-top: 0.25rem;
     }
 
-    /* Selected Element Panel */
+    /* Selected Element Panel - floating near element */
     .selected-panel {
       display: none;
-      padding: 1rem;
-      background: var(--primary-lighter);
-      border-top: 1px solid rgba(37,99,235,0.1);
+      position: absolute;
+      padding: 0.75rem;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border: 1px solid var(--gray-200);
+      z-index: 100;
+      white-space: nowrap;
     }
 
     .selected-panel.visible { display: block; }
@@ -677,21 +685,22 @@
     .selected-panel__header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.5rem;
     }
 
     .selected-panel__tag {
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: var(--primary);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--gray-600);
     }
 
     .selected-panel__tag code {
-      background: white;
-      padding: 0.25rem 0.5rem;
+      background: var(--primary-lighter);
+      color: var(--primary);
+      padding: 0.125rem 0.375rem;
       border-radius: 4px;
       font-family: 'SF Mono', monospace;
+      font-weight: 600;
     }
 
     .selected-panel__colors {
@@ -728,9 +737,13 @@
       height: 14px;
     }
 
-    .selected-panel__btn--apply {
-      background: var(--primary);
-      color: white;
+    .selected-panel__btn--reset {
+      background: var(--gray-100);
+      color: var(--gray-600);
+    }
+
+    .selected-panel__btn--reset:hover {
+      background: var(--gray-200);
     }
 
     .selected-panel__btn--delete {
@@ -1187,23 +1200,23 @@
           <div class="viewbox-handle viewbox-handle--sw" data-handle="sw"></div>
           <div class="viewbox-handle viewbox-handle--se" data-handle="se"></div>
         </div>
-      </div>
 
-      <!-- Selected Element Panel -->
-      <div class="selected-panel" id="selected-panel">
-        <div class="selected-panel__header">
-          <span class="selected-panel__tag">Выбран: <code id="selected-tag"></code></span>
-        </div>
-        <div class="selected-panel__colors">
-          <input type="color" id="element-color" class="selected-panel__picker" value="#2563eb">
-          <button class="selected-panel__btn selected-panel__btn--apply" id="apply-color">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            Применить
-          </button>
-          <button class="selected-panel__btn selected-panel__btn--delete" id="delete-element">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            Удалить
-          </button>
+        <!-- Selected Element Panel - floating -->
+        <div class="selected-panel" id="selected-panel">
+          <div class="selected-panel__header">
+            <span class="selected-panel__tag">Выбран: <code id="selected-tag"></code></span>
+          </div>
+          <div class="selected-panel__colors">
+            <input type="color" id="element-color" class="selected-panel__picker" value="#2563eb">
+            <button class="selected-panel__btn selected-panel__btn--reset" id="reset-color">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              Сбросить
+            </button>
+            <button class="selected-panel__btn selected-panel__btn--delete" id="delete-element">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Удалить
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1239,6 +1252,7 @@
   let currentSvg = null;
   let filename = 'icon';
   let selectedElement = null;
+  let selectedElementOriginalColors = null; // { fill, stroke }
   let recolorMode = 'fill';
   let colorMode = 'solid';
   let gradientType = 'linear';
@@ -1592,6 +1606,39 @@
     requestAnimationFrame(() => { if (viewBoxEditMode) updateViewBoxFrame(); });
   }
 
+  // Position panel near selected element
+  function positionSelectedPanel(el) {
+    const containerRect = previewContainer.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+
+    // Calculate position relative to container
+    let left = elRect.right - containerRect.left + 10;
+    let top = elRect.top - containerRect.top;
+
+    // Make panel visible to measure it
+    selectedPanel.classList.add('visible');
+    const panelRect = selectedPanel.getBoundingClientRect();
+
+    // If panel goes off right edge, show on left side of element
+    if (left + panelRect.width > containerRect.width) {
+      left = elRect.left - containerRect.left - panelRect.width - 10;
+    }
+
+    // If panel goes off left edge, position at left
+    if (left < 10) left = 10;
+
+    // If panel goes below container, adjust up
+    if (top + panelRect.height > containerRect.height - 10) {
+      top = containerRect.height - panelRect.height - 10;
+    }
+
+    // If panel goes above container, adjust down
+    if (top < 10) top = 10;
+
+    selectedPanel.style.left = left + 'px';
+    selectedPanel.style.top = top + 'px';
+  }
+
   // Element selection
   function setupElementSelection() {
     const svgEl = preview.querySelector('svg');
@@ -1610,6 +1657,12 @@
         el.classList.add('selected');
         selectedElement = el;
 
+        // Save original colors for reset
+        selectedElementOriginalColors = {
+          fill: el.getAttribute('fill'),
+          stroke: el.getAttribute('stroke')
+        };
+
         // Update panel
         selectedTag.textContent = `<${el.tagName.toLowerCase()}>`;
 
@@ -1619,7 +1672,8 @@
           elementColor.value = fill;
         }
 
-        selectedPanel.classList.add('visible');
+        // Position and show panel near element
+        positionSelectedPanel(el);
       });
     });
 
@@ -1635,11 +1689,12 @@
     const svgEl = preview.querySelector('svg');
     if (svgEl) svgEl.querySelectorAll('.selected').forEach(s => s.classList.remove('selected'));
     selectedElement = null;
+    selectedElementOriginalColors = null;
     selectedPanel.classList.remove('visible');
   }
 
-  // Apply color to selected element
-  $('apply-color').addEventListener('click', () => {
+  // Auto-apply color on change
+  elementColor.addEventListener('input', () => {
     if (!selectedElement) return;
 
     const color = elementColor.value;
@@ -1649,7 +1704,30 @@
     }
 
     currentSvg = new XMLSerializer().serializeToString(preview.querySelector('svg'));
-    showToast('Цвет применён');
+  });
+
+  // Reset color to original
+  $('reset-color').addEventListener('click', () => {
+    if (!selectedElement || !selectedElementOriginalColors) return;
+
+    // Restore original colors
+    if (selectedElementOriginalColors.fill) {
+      selectedElement.setAttribute('fill', selectedElementOriginalColors.fill);
+      if (!selectedElementOriginalColors.fill.startsWith('url')) {
+        elementColor.value = selectedElementOriginalColors.fill;
+      }
+    } else {
+      selectedElement.removeAttribute('fill');
+    }
+
+    if (selectedElementOriginalColors.stroke) {
+      selectedElement.setAttribute('stroke', selectedElementOriginalColors.stroke);
+    } else {
+      selectedElement.removeAttribute('stroke');
+    }
+
+    currentSvg = new XMLSerializer().serializeToString(preview.querySelector('svg'));
+    showToast('Цвет сброшен');
   });
 
   // Delete selected element
