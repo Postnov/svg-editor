@@ -738,12 +738,14 @@
       color: var(--danger);
     }
 
-    /* ViewBox Controls */
+    /* ViewBox visual editing overlay */
     .viewbox-overlay {
       position: absolute;
       pointer-events: none;
       display: none;
       z-index: 10;
+      border: 1px dashed var(--primary);
+      border-radius: 2px;
     }
 
     .viewbox-overlay.visible {
@@ -753,30 +755,19 @@
     .viewbox-frame {
       position: absolute;
       inset: 0;
-      border: 2px dashed var(--primary);
-      background: rgba(37, 99, 235, 0.03);
       pointer-events: auto;
       cursor: move;
     }
 
     .viewbox-handle {
       position: absolute;
-      background: var(--primary);
-      pointer-events: auto;
-      z-index: 11;
-    }
-
-    .viewbox-handle--corner {
       width: 8px;
       height: 8px;
-      border-radius: 2px;
-      border: 2px solid white;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .viewbox-handle--edge {
       background: var(--primary);
+      border: 1px solid white;
       border-radius: 1px;
+      pointer-events: auto;
+      z-index: 11;
     }
 
     .viewbox-handle--nw { top: -4px; left: -4px; cursor: nw-resize; }
@@ -784,27 +775,47 @@
     .viewbox-handle--sw { bottom: -4px; left: -4px; cursor: sw-resize; }
     .viewbox-handle--se { bottom: -4px; right: -4px; cursor: se-resize; }
 
-    .viewbox-handle--n { top: -3px; left: 50%; transform: translateX(-50%); width: 20px; height: 4px; cursor: n-resize; }
-    .viewbox-handle--s { bottom: -3px; left: 50%; transform: translateX(-50%); width: 20px; height: 4px; cursor: s-resize; }
-    .viewbox-handle--w { left: -3px; top: 50%; transform: translateY(-50%); width: 4px; height: 20px; cursor: w-resize; }
-    .viewbox-handle--e { right: -3px; top: 50%; transform: translateY(-50%); width: 4px; height: 20px; cursor: e-resize; }
-
-    /* ViewBox panel in sidebar */
-    .viewbox-panel__info {
-      display: flex;
-      align-items: center;
+    /* ViewBox inputs in sidebar */
+    .viewbox-inputs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 0.5rem;
-      padding: 0.5rem 0.75rem;
-      background: var(--gray-100);
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-family: 'SF Mono', monospace;
-      color: var(--gray-700);
     }
 
-    .viewbox-panel__toggle {
-      margin-left: auto;
-      padding: 0.375rem 0.75rem;
+    .viewbox-input {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .viewbox-input label {
+      font-size: 0.625rem;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .viewbox-input input {
+      width: 100%;
+      padding: 0.5rem 0.25rem;
+      border: 1px solid var(--gray-200);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      text-align: center;
+      font-family: 'SF Mono', monospace;
+    }
+
+    .viewbox-input input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-lighter);
+    }
+
+    .viewbox-toggle {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.5rem;
       border: 1px solid var(--gray-200);
       border-radius: 6px;
       background: white;
@@ -812,15 +823,24 @@
       font-weight: 500;
       color: var(--gray-600);
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
       transition: all 0.15s;
     }
 
-    .viewbox-panel__toggle:hover {
+    .viewbox-toggle svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .viewbox-toggle:hover {
       border-color: var(--primary);
       color: var(--primary);
     }
 
-    .viewbox-panel__toggle.active {
+    .viewbox-toggle.active {
       background: var(--primary);
       border-color: var(--primary);
       color: white;
@@ -1078,10 +1098,28 @@
     <!-- ViewBox -->
     <div class="section">
       <div class="section__title">ViewBox</div>
-      <div class="viewbox-panel__info">
-        <span id="viewbox-text">0 0 24 24</span>
-        <button class="viewbox-panel__toggle" id="viewbox-edit-btn">Редактировать</button>
+      <div class="viewbox-inputs">
+        <div class="viewbox-input">
+          <label>X</label>
+          <input type="number" id="vb-x" value="0" step="1">
+        </div>
+        <div class="viewbox-input">
+          <label>Y</label>
+          <input type="number" id="vb-y" value="0" step="1">
+        </div>
+        <div class="viewbox-input">
+          <label>W</label>
+          <input type="number" id="vb-w" value="24" min="1" step="1">
+        </div>
+        <div class="viewbox-input">
+          <label>H</label>
+          <input type="number" id="vb-h" value="24" min="1" step="1">
+        </div>
       </div>
+      <button class="viewbox-toggle" id="viewbox-edit-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3l2 2-8 8-2 2v3h3l2-2 8-8 2 2"/></svg>
+        Визуальное редактирование
+      </button>
     </div>
   </aside>
 
@@ -1141,20 +1179,14 @@
           </div>
         </div>
 
-        <!-- ViewBox Overlay with drag handles -->
+        <!-- ViewBox visual editing overlay -->
         <div class="viewbox-overlay" id="viewbox-overlay">
-          <div class="viewbox-frame" id="viewbox-frame">
-            <div class="viewbox-handle viewbox-handle--corner viewbox-handle--nw" data-handle="nw"></div>
-            <div class="viewbox-handle viewbox-handle--corner viewbox-handle--ne" data-handle="ne"></div>
-            <div class="viewbox-handle viewbox-handle--corner viewbox-handle--sw" data-handle="sw"></div>
-            <div class="viewbox-handle viewbox-handle--corner viewbox-handle--se" data-handle="se"></div>
-            <div class="viewbox-handle viewbox-handle--edge viewbox-handle--n" data-handle="n"></div>
-            <div class="viewbox-handle viewbox-handle--edge viewbox-handle--s" data-handle="s"></div>
-            <div class="viewbox-handle viewbox-handle--edge viewbox-handle--w" data-handle="w"></div>
-            <div class="viewbox-handle viewbox-handle--edge viewbox-handle--e" data-handle="e"></div>
-          </div>
+          <div class="viewbox-frame" id="viewbox-frame"></div>
+          <div class="viewbox-handle viewbox-handle--nw" data-handle="nw"></div>
+          <div class="viewbox-handle viewbox-handle--ne" data-handle="ne"></div>
+          <div class="viewbox-handle viewbox-handle--sw" data-handle="sw"></div>
+          <div class="viewbox-handle viewbox-handle--se" data-handle="se"></div>
         </div>
-
       </div>
 
       <!-- Selected Element Panel -->
@@ -1237,7 +1269,6 @@
   const gradientPreview = $('gradient-preview');
   const strokeSlider = $('stroke-width');
   const strokeVal = $('stroke-val');
-  const viewboxText = $('viewbox-text');
   const selectedPanel = $('selected-panel');
   const selectedTag = $('selected-tag');
   const elementColor = $('element-color');
@@ -1317,14 +1348,35 @@
     }
   }
 
+  // ViewBox input elements
+  const vbX = $('vb-x');
+  const vbY = $('vb-y');
+  const vbW = $('vb-w');
+  const vbH = $('vb-h');
+
   function updateViewBoxDisplay() {
-    viewboxText.textContent = `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`;
+    vbX.value = viewBox.x;
+    vbY.value = viewBox.y;
+    vbW.value = viewBox.w;
+    vbH.value = viewBox.h;
   }
 
-  // ViewBox frame elements (for visual editing)
+  // ViewBox input handlers
+  [vbX, vbY, vbW, vbH].forEach(input => {
+    input.addEventListener('input', () => {
+      viewBox.x = parseFloat(vbX.value) || 0;
+      viewBox.y = parseFloat(vbY.value) || 0;
+      viewBox.w = Math.max(1, parseFloat(vbW.value) || 1);
+      viewBox.h = Math.max(1, parseFloat(vbH.value) || 1);
+      if (originalSvg) render();
+    });
+  });
+
+  // ViewBox visual editing
   const viewboxOverlay = $('viewbox-overlay');
   const viewboxFrame = $('viewbox-frame');
   const previewContainer = $('preview-container');
+  const viewboxEditBtn = $('viewbox-edit-btn');
 
   function updateViewBoxFrame() {
     if (!originalSvg || !viewBoxEditMode) return;
@@ -1335,17 +1387,79 @@
     const containerRect = previewContainer.getBoundingClientRect();
     const svgRect = svgEl.getBoundingClientRect();
 
-    // Position overlay exactly around the SVG element
-    const overlayLeft = svgRect.left - containerRect.left;
-    const overlayTop = svgRect.top - containerRect.top;
-    const overlayWidth = svgRect.width;
-    const overlayHeight = svgRect.height;
-
-    viewboxOverlay.style.left = overlayLeft + 'px';
-    viewboxOverlay.style.top = overlayTop + 'px';
-    viewboxOverlay.style.width = overlayWidth + 'px';
-    viewboxOverlay.style.height = overlayHeight + 'px';
+    viewboxOverlay.style.left = (svgRect.left - containerRect.left) + 'px';
+    viewboxOverlay.style.top = (svgRect.top - containerRect.top) + 'px';
+    viewboxOverlay.style.width = svgRect.width + 'px';
+    viewboxOverlay.style.height = svgRect.height + 'px';
   }
+
+  viewboxEditBtn.addEventListener('click', () => {
+    viewBoxEditMode = !viewBoxEditMode;
+    viewboxEditBtn.classList.toggle('active', viewBoxEditMode);
+    viewboxOverlay.classList.toggle('visible', viewBoxEditMode);
+    if (viewBoxEditMode) updateViewBoxFrame();
+  });
+
+  // ViewBox drag handlers
+  viewboxFrame.addEventListener('mousedown', e => {
+    if (!viewBoxEditMode) return;
+    dragData = { type: 'move', startX: e.clientX, startY: e.clientY, origViewBox: { ...viewBox } };
+    e.preventDefault();
+  });
+
+  document.querySelectorAll('.viewbox-handle').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      if (!viewBoxEditMode) return;
+      dragData = { type: handle.dataset.handle, startX: e.clientX, startY: e.clientY, origViewBox: { ...viewBox } };
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragData || !originalSvg) return;
+
+    const svgEl = preview.querySelector('svg');
+    if (!svgEl) return;
+
+    const svgRect = svgEl.getBoundingClientRect();
+    const scaleX = viewBox.w / svgRect.width;
+    const scaleY = viewBox.h / svgRect.height;
+    const dx = (e.clientX - dragData.startX) * scaleX;
+    const dy = (e.clientY - dragData.startY) * scaleY;
+    const orig = dragData.origViewBox;
+
+    switch (dragData.type) {
+      case 'move':
+        viewBox.x = Math.round((orig.x - dx) * 10) / 10;
+        viewBox.y = Math.round((orig.y - dy) * 10) / 10;
+        break;
+      case 'nw':
+        viewBox.x = Math.round((orig.x + dx) * 10) / 10;
+        viewBox.y = Math.round((orig.y + dy) * 10) / 10;
+        viewBox.w = Math.max(1, Math.round((orig.w - dx) * 10) / 10);
+        viewBox.h = Math.max(1, Math.round((orig.h - dy) * 10) / 10);
+        break;
+      case 'ne':
+        viewBox.y = Math.round((orig.y + dy) * 10) / 10;
+        viewBox.w = Math.max(1, Math.round((orig.w + dx) * 10) / 10);
+        viewBox.h = Math.max(1, Math.round((orig.h - dy) * 10) / 10);
+        break;
+      case 'sw':
+        viewBox.x = Math.round((orig.x + dx) * 10) / 10;
+        viewBox.w = Math.max(1, Math.round((orig.w - dx) * 10) / 10);
+        viewBox.h = Math.max(1, Math.round((orig.h + dy) * 10) / 10);
+        break;
+      case 'se':
+        viewBox.w = Math.max(1, Math.round((orig.w + dx) * 10) / 10);
+        viewBox.h = Math.max(1, Math.round((orig.h + dy) * 10) / 10);
+        break;
+    }
+    render();
+  });
+
+  document.addEventListener('mouseup', () => { dragData = null; });
+  window.addEventListener('resize', () => { if (viewBoxEditMode) updateViewBoxFrame(); });
 
   // Render SVG
   function render() {
@@ -1475,11 +1589,7 @@
 
     setupElementSelection();
     updateViewBoxDisplay();
-
-    // Update viewbox frame if in edit mode
-    requestAnimationFrame(() => {
-      if (viewBoxEditMode) updateViewBoxFrame();
-    });
+    requestAnimationFrame(() => { if (viewBoxEditMode) updateViewBoxFrame(); });
   }
 
   // Element selection
@@ -1878,123 +1988,6 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
-
-  // ViewBox Visual Editing - Event Handlers
-  const viewboxEditBtn = $('viewbox-edit-btn');
-
-  viewboxEditBtn.addEventListener('click', () => {
-    viewBoxEditMode = !viewBoxEditMode;
-    viewboxEditBtn.classList.toggle('active', viewBoxEditMode);
-    viewboxOverlay.classList.toggle('visible', viewBoxEditMode);
-    if (viewBoxEditMode) {
-      updateViewBoxFrame();
-    }
-  });
-
-  // Handle dragging
-  viewboxFrame.addEventListener('mousedown', e => {
-    if (!viewBoxEditMode) return;
-    if (e.target.classList.contains('viewbox-handle')) return;
-
-    dragData = {
-      type: 'move',
-      startX: e.clientX,
-      startY: e.clientY,
-      origViewBox: { ...viewBox }
-    };
-    e.preventDefault();
-  });
-
-  document.querySelectorAll('.viewbox-handle').forEach(handle => {
-    handle.addEventListener('mousedown', e => {
-      if (!viewBoxEditMode) return;
-
-      dragData = {
-        type: handle.dataset.handle,
-        startX: e.clientX,
-        startY: e.clientY,
-        origViewBox: { ...viewBox }
-      };
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  });
-
-  document.addEventListener('mousemove', e => {
-    if (!dragData || !originalSvg) return;
-
-    const svgEl = preview.querySelector('svg');
-    if (!svgEl) return;
-
-    const svgRect = svgEl.getBoundingClientRect();
-    const scaleX = viewBox.w / svgRect.width;
-    const scaleY = viewBox.h / svgRect.height;
-
-    const dx = (e.clientX - dragData.startX) * scaleX;
-    const dy = (e.clientY - dragData.startY) * scaleY;
-
-    const orig = dragData.origViewBox;
-
-    switch (dragData.type) {
-      case 'move':
-        viewBox.x = orig.x - dx;
-        viewBox.y = orig.y - dy;
-        break;
-      case 'nw':
-        viewBox.x = orig.x + dx;
-        viewBox.y = orig.y + dy;
-        viewBox.w = Math.max(1, orig.w - dx);
-        viewBox.h = Math.max(1, orig.h - dy);
-        break;
-      case 'ne':
-        viewBox.y = orig.y + dy;
-        viewBox.w = Math.max(1, orig.w + dx);
-        viewBox.h = Math.max(1, orig.h - dy);
-        break;
-      case 'sw':
-        viewBox.x = orig.x + dx;
-        viewBox.w = Math.max(1, orig.w - dx);
-        viewBox.h = Math.max(1, orig.h + dy);
-        break;
-      case 'se':
-        viewBox.w = Math.max(1, orig.w + dx);
-        viewBox.h = Math.max(1, orig.h + dy);
-        break;
-      case 'n':
-        viewBox.y = orig.y + dy;
-        viewBox.h = Math.max(1, orig.h - dy);
-        break;
-      case 's':
-        viewBox.h = Math.max(1, orig.h + dy);
-        break;
-      case 'w':
-        viewBox.x = orig.x + dx;
-        viewBox.w = Math.max(1, orig.w - dx);
-        break;
-      case 'e':
-        viewBox.w = Math.max(1, orig.w + dx);
-        break;
-    }
-
-    // Round values for cleaner output
-    viewBox.x = Math.round(viewBox.x * 100) / 100;
-    viewBox.y = Math.round(viewBox.y * 100) / 100;
-    viewBox.w = Math.round(viewBox.w * 100) / 100;
-    viewBox.h = Math.round(viewBox.h * 100) / 100;
-
-    render();
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (dragData) {
-      dragData = null;
-    }
-  });
-
-  // Update frame on window resize
-  window.addEventListener('resize', () => {
-    if (viewBoxEditMode) updateViewBoxFrame();
-  });
 })();
 </script>
 </body>
