@@ -480,6 +480,55 @@
       color: white;
     }
 
+    /* Stroke width slider */
+    .svg-recolor__slider-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .svg-recolor__slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--sr-gray-200);
+      outline: none;
+    }
+
+    .svg-recolor__slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--sr-primary);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+      transition: transform 0.15s ease;
+    }
+
+    .svg-recolor__slider::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .svg-recolor__slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--sr-primary);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    }
+
+    .svg-recolor__input--small {
+      width: 60px;
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+    }
+
     @media (max-width: 600px) {
       .svg-recolor {
         margin: 20px;
@@ -557,6 +606,14 @@
             <input type="color" id="sr-color" class="svg-recolor__color-picker" value="#2563eb">
           </div>
           <input type="text" id="sr-color-text" class="svg-recolor__input" value="#2563EB">
+        </div>
+      </div>
+
+      <div class="svg-recolor__group">
+        <label class="svg-recolor__label">Толщина обводки</label>
+        <div class="svg-recolor__slider-group">
+          <input type="range" id="sr-stroke-width" class="svg-recolor__slider" min="0" max="10" step="0.5" value="2">
+          <input type="number" id="sr-stroke-value" class="svg-recolor__input svg-recolor__input--small" min="0" max="20" step="0.5" value="2">
         </div>
       </div>
 
@@ -654,6 +711,7 @@
   let rotation = 0;
   let flipH = false;
   let flipV = false;
+  let strokeWidth = 2;
 
   // Drag & drop
   ['dragenter', 'dragover'].forEach(evt => {
@@ -811,11 +869,28 @@
       }
     }
 
+    // Apply stroke width
+    applyStrokeWidth(svg);
+
     // Apply transforms
     applyTransforms(svg);
 
     currentSvg = new XMLSerializer().serializeToString(svg);
     elements.preview.innerHTML = currentSvg;
+  }
+
+  function applyStrokeWidth(svg) {
+    const allElements = svg.querySelectorAll('*');
+
+    allElements.forEach(el => {
+      // Only apply to elements that have stroke
+      if (el.getAttribute('stroke') && el.getAttribute('stroke') !== 'none') {
+        el.setAttribute('stroke-width', strokeWidth);
+      }
+      if (el.style.stroke && el.style.stroke !== 'none') {
+        el.style.strokeWidth = strokeWidth;
+      }
+    });
   }
 
   function applyTransforms(svg) {
@@ -900,8 +975,11 @@
     rotation = 0;
     flipH = false;
     flipV = false;
+    strokeWidth = 2;
     document.getElementById('sr-flip-h').classList.remove('svg-recolor__transform-btn--active');
     document.getElementById('sr-flip-v').classList.remove('svg-recolor__transform-btn--active');
+    document.getElementById('sr-stroke-width').value = 2;
+    document.getElementById('sr-stroke-value').value = 2;
     applyColor();
   });
 
@@ -925,6 +1003,22 @@
   document.getElementById('sr-flip-v').addEventListener('click', function() {
     flipV = !flipV;
     this.classList.toggle('svg-recolor__transform-btn--active', flipV);
+    if (originalSvg) applyColor();
+  });
+
+  // Stroke width controls
+  const strokeSlider = document.getElementById('sr-stroke-width');
+  const strokeInput = document.getElementById('sr-stroke-value');
+
+  strokeSlider.addEventListener('input', () => {
+    strokeWidth = parseFloat(strokeSlider.value);
+    strokeInput.value = strokeWidth;
+    if (originalSvg) applyColor();
+  });
+
+  strokeInput.addEventListener('input', () => {
+    strokeWidth = parseFloat(strokeInput.value) || 0;
+    strokeSlider.value = Math.min(strokeWidth, 10);
     if (originalSvg) applyColor();
   });
 
