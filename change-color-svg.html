@@ -905,6 +905,96 @@
       font-weight: 500;
     }
 
+    /* Modal */
+    .svg-recolor__modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .svg-recolor__modal-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .svg-recolor__modal {
+      background: white;
+      border-radius: var(--sr-border-radius-lg);
+      padding: 1.5rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+      transform: scale(0.95);
+      transition: transform 0.2s ease;
+    }
+
+    .svg-recolor__modal-overlay.visible .svg-recolor__modal {
+      transform: scale(1);
+    }
+
+    .svg-recolor__modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .svg-recolor__modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--sr-gray-900);
+    }
+
+    .svg-recolor__modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--sr-gray-100);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .svg-recolor__modal-close:hover {
+      background: var(--sr-gray-200);
+    }
+
+    .svg-recolor__modal-close svg {
+      width: 16px;
+      height: 16px;
+      color: var(--sr-gray-600);
+    }
+
+    .svg-recolor__modal-code {
+      width: 100%;
+      height: 150px;
+      padding: 0.75rem;
+      border: 1px solid var(--sr-gray-200);
+      border-radius: var(--sr-border-radius);
+      font-size: 0.75rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      resize: none;
+      background: var(--sr-gray-50);
+      word-break: break-all;
+    }
+
+    .svg-recolor__modal-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+
     @media (max-width: 600px) {
       .svg-recolor {
         margin: 20px;
@@ -1126,6 +1216,25 @@
     <span id="sr-toast-text">Элемент удалён</span>
   </div>
 
+  <!-- Modal -->
+  <div class="svg-recolor__modal-overlay" id="sr-modal">
+    <div class="svg-recolor__modal">
+      <div class="svg-recolor__modal-header">
+        <span class="svg-recolor__modal-title" id="sr-modal-title">Base64</span>
+        <button class="svg-recolor__modal-close" id="sr-modal-close">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <textarea class="svg-recolor__modal-code" id="sr-modal-code" readonly></textarea>
+      <div class="svg-recolor__modal-actions">
+        <button class="svg-recolor__btn svg-recolor__btn--primary" id="sr-modal-copy">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Копировать
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="svg-recolor__divider"></div>
 
   <div class="svg-recolor__actions">
@@ -1151,6 +1260,20 @@
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
       </svg>
       Копировать
+    </button>
+    <button id="sr-base64" class="svg-recolor__btn svg-recolor__btn--secondary" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="4 17 10 11 4 5"/>
+        <line x1="12" y1="19" x2="20" y2="19"/>
+      </svg>
+      Base64
+    </button>
+    <button id="sr-datauri" class="svg-recolor__btn svg-recolor__btn--secondary" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+      Data URI
     </button>
     <button id="sr-reset" class="svg-recolor__btn svg-recolor__btn--secondary" disabled>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1189,6 +1312,8 @@
     downloadSvg: document.getElementById('sr-download-svg'),
     downloadPng: document.getElementById('sr-download-png'),
     copySvg: document.getElementById('sr-copy-svg'),
+    base64Btn: document.getElementById('sr-base64'),
+    datauriBtn: document.getElementById('sr-datauri'),
     resetBtn: document.getElementById('sr-reset'),
     modeBtns: document.querySelectorAll('.svg-recolor__mode-btn')
   };
@@ -1280,6 +1405,8 @@
     elements.downloadSvg.disabled = !enabled;
     elements.downloadPng.disabled = !enabled;
     elements.copySvg.disabled = !enabled;
+    elements.base64Btn.disabled = !enabled;
+    elements.datauriBtn.disabled = !enabled;
     elements.resetBtn.disabled = !enabled;
   }
 
@@ -1646,6 +1773,53 @@
       document.body.removeChild(textarea);
       showToast('SVG скопирован в буфер');
     }
+  });
+
+  // Modal functions
+  const modal = document.getElementById('sr-modal');
+  const modalTitle = document.getElementById('sr-modal-title');
+  const modalCode = document.getElementById('sr-modal-code');
+
+  function showModal(title, code) {
+    modalTitle.textContent = title;
+    modalCode.value = code;
+    modal.classList.add('visible');
+  }
+
+  function hideModal() {
+    modal.classList.remove('visible');
+  }
+
+  document.getElementById('sr-modal-close').addEventListener('click', hideModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) hideModal();
+  });
+
+  document.getElementById('sr-modal-copy').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(modalCode.value);
+      showToast('Скопировано в буфер');
+      hideModal();
+    } catch (err) {
+      modalCode.select();
+      document.execCommand('copy');
+      showToast('Скопировано в буфер');
+      hideModal();
+    }
+  });
+
+  // Base64 export
+  elements.base64Btn.addEventListener('click', () => {
+    const base64 = btoa(unescape(encodeURIComponent(currentSvg)));
+    showModal('Base64', base64);
+  });
+
+  // Data URI export
+  elements.datauriBtn.addEventListener('click', () => {
+    const base64 = btoa(unescape(encodeURIComponent(currentSvg)));
+    const dataUri = `data:image/svg+xml;base64,${base64}`;
+    showModal('Data URI', dataUri);
   });
 
   // PNG Size selector
