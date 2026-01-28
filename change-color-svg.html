@@ -686,6 +686,55 @@
       color: #10b981;
     }
 
+    /* PNG size selector */
+    .svg-recolor__png-size {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      padding: 0.875rem;
+      background: var(--sr-gray-50);
+      border-radius: var(--sr-border-radius);
+      border: 1px solid var(--sr-gray-100);
+    }
+
+    .svg-recolor__png-label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--sr-gray-600);
+    }
+
+    .svg-recolor__select {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--sr-gray-200);
+      border-radius: var(--sr-border-radius);
+      font-size: 0.8125rem;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .svg-recolor__select:focus {
+      outline: none;
+      border-color: var(--sr-primary);
+      box-shadow: 0 0 0 3px var(--sr-primary-lighter);
+    }
+
+    .svg-recolor__custom-size {
+      width: 80px;
+      padding: 0.5rem;
+      border: 1px solid var(--sr-gray-200);
+      border-radius: var(--sr-border-radius);
+      font-size: 0.8125rem;
+      text-align: center;
+      display: none;
+    }
+
+    .svg-recolor__custom-size.visible {
+      display: block;
+    }
+
     @media (max-width: 600px) {
       .svg-recolor {
         margin: 20px;
@@ -895,6 +944,21 @@
       </svg>
       Сбросить
     </button>
+  </div>
+
+  <!-- PNG Size Selector -->
+  <div class="svg-recolor__png-size">
+    <span class="svg-recolor__png-label">Размер PNG:</span>
+    <select id="sr-png-size" class="svg-recolor__select">
+      <option value="64">64 × 64</option>
+      <option value="128">128 × 128</option>
+      <option value="256">256 × 256</option>
+      <option value="512" selected>512 × 512</option>
+      <option value="1024">1024 × 1024</option>
+      <option value="2048">2048 × 2048</option>
+      <option value="custom">Свой размер...</option>
+    </select>
+    <input type="number" id="sr-png-custom" class="svg-recolor__custom-size" placeholder="px" min="16" max="4096">
   </div>
 </div>
 
@@ -1194,21 +1258,39 @@
     }
   });
 
+  // PNG Size selector
+  const pngSizeSelect = document.getElementById('sr-png-size');
+  const pngCustomInput = document.getElementById('sr-png-custom');
+
+  pngSizeSelect.addEventListener('change', () => {
+    pngCustomInput.classList.toggle('visible', pngSizeSelect.value === 'custom');
+    if (pngSizeSelect.value === 'custom') {
+      pngCustomInput.focus();
+    }
+  });
+
+  function getPngSize() {
+    if (pngSizeSelect.value === 'custom') {
+      return parseInt(pngCustomInput.value) || 512;
+    }
+    return parseInt(pngSizeSelect.value);
+  }
+
   // Download PNG
   elements.downloadPng.addEventListener('click', () => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(currentSvg, 'image/svg+xml');
     const svg = doc.querySelector('svg');
-    
-    // Set size for PNG export
-    const size = 512;
+
+    // Get size from selector
+    const size = getPngSize();
     svg.setAttribute('width', size);
     svg.setAttribute('height', size);
-    
+
     const svgData = new XMLSerializer().serializeToString(svg);
     const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(svgBlob);
-    
+
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
@@ -1216,7 +1298,7 @@
       canvas.height = size;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, size, size);
-      
+
       canvas.toBlob(blob => {
         downloadBlob(blob, `${currentFilename}-recolored.png`);
         URL.revokeObjectURL(url);
