@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG Recolor Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="svg-recolor">
+  <style>
+    .svg-recolor,
+    .svg-recolor * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .svg-recolor {
+      --sr-primary: #2563eb;
+      --sr-primary-light: #3b82f6;
+      --sr-primary-lighter: #eff6ff;
+      --sr-primary-hover: #1d4ed8;
+      --sr-gray-50: #f8fafc;
+      --sr-gray-100: #f1f5f9;
+      --sr-gray-200: #e2e8f0;
+      --sr-gray-300: #cbd5e1;
+      --sr-gray-400: #94a3b8;
+      --sr-gray-500: #64748b;
+      --sr-gray-600: #475569;
+      --sr-gray-700: #334155;
+      --sr-gray-900: #0f172a;
+      --sr-border-radius: 12px;
+      --sr-border-radius-lg: 16px;
+      --sr-spacing: 1.25rem;
+      --sr-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --sr-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+      --sr-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+      --sr-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.08);
+      width: 100%;
+      max-width: 720px;
+      padding: 2.5rem;
+      background: #ffffff;
+      border-radius: var(--sr-border-radius-lg);
+      box-shadow: var(--sr-shadow-xl);
+      margin: 40px auto;
+      border: 1px solid var(--sr-gray-100);
+    }
+
+    .svg-recolor__header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .svg-recolor__icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--sr-primary-light) 0%, var(--sr-primary) 100%);
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+
+    .svg-recolor__icon svg {
+      width: 28px;
+      height: 28px;
+      color: white;
+    }
+
+    .svg-recolor__title {
+      color: var(--sr-gray-900);
+      font-size: 1.625rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.375rem;
+    }
+
+    .svg-recolor__subtitle {
+      color: var(--sr-gray-500);
+      font-size: 0.9375rem;
+      font-weight: 400;
+    }
+
+    .svg-recolor__upload-zone {
+      border: 2px dashed var(--sr-gray-200);
+      border-radius: var(--sr-border-radius);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      background: var(--sr-gray-50);
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .svg-recolor__upload-zone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--sr-primary-lighter) 0%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .svg-recolor__upload-zone:hover,
+    .svg-recolor__upload-zone--dragover {
+      border-color: var(--sr-primary-light);
+      background: white;
+    }
+
+    .svg-recolor__upload-zone:hover::before,
+    .svg-recolor__upload-zone--dragover::before {
+      opacity: 1;
+    }
+
+    .svg-recolor__upload-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .svg-recolor__upload-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1rem;
+      background: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--sr-shadow);
+      transition: transform 0.25s ease;
+    }
+
+    .svg-recolor__upload-zone:hover .svg-recolor__upload-icon {
+      transform: translateY(-2px);
+    }
+
+    .svg-recolor__upload-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--sr-primary);
+    }
+
+    .svg-recolor__upload-text {
+      color: var(--sr-gray-600);
+      font-size: 0.9375rem;
+      line-height: 1.5;
+    }
+
+    .svg-recolor__upload-text strong {
+      color: var(--sr-primary);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .svg-recolor__upload-text strong:hover {
+      text-decoration: underline;
+    }
+
+    .svg-recolor__upload-hint {
+      color: var(--sr-gray-400);
+      font-size: 0.8125rem;
+      margin-top: 0.5rem;
+    }
+
+    .svg-recolor__file-input {
+      display: none;
+    }
+
+    .svg-recolor__main-row {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+    }
+
+    .svg-recolor__controls {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .svg-recolor__group {
+      margin-bottom: var(--sr-spacing);
+    }
+
+    .svg-recolor__group:last-child {
+      margin-bottom: 0;
+    }
+
+    .svg-recolor__label {
+      display: block;
+      margin-bottom: 0.625rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--sr-gray-700);
+      letter-spacing: -0.01em;
+    }
+
+    .svg-recolor__color-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .svg-recolor__color-picker-wrapper {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+    }
+
+    .svg-recolor__color-picker {
+      -webkit-appearance: none;
+      width: 52px;
+      height: 52px;
+      padding: 0;
+      border: none;
+      border-radius: var(--sr-border-radius);
+      cursor: pointer;
+      box-shadow: var(--sr-shadow), inset 0 0 0 3px rgba(255,255,255,0.9);
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .svg-recolor__color-picker:hover {
+      transform: scale(1.02);
+      box-shadow: var(--sr-shadow-lg), inset 0 0 0 3px rgba(255,255,255,0.9);
+    }
+
+    .svg-recolor__color-picker::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .svg-recolor__color-picker::-webkit-color-swatch {
+      border: none;
+      border-radius: var(--sr-border-radius);
+    }
+
+    .svg-recolor__input {
+      width: 130px;
+      padding: 0.875rem 1rem;
+      border: 1px solid var(--sr-gray-200);
+      border-radius: var(--sr-border-radius);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      letter-spacing: 0.02em;
+      transition: all 0.2s ease;
+      background: white;
+      text-transform: uppercase;
+    }
+
+    .svg-recolor__input:focus {
+      outline: none;
+      border-color: var(--sr-primary);
+      box-shadow: 0 0 0 4px var(--sr-primary-lighter);
+    }
+
+    .svg-recolor__preview-section {
+      flex-shrink: 0;
+    }
+
+    .svg-recolor__preview-label {
+      text-align: center;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--sr-gray-700);
+      margin-bottom: 0.625rem;
+    }
+
+    .svg-recolor__preview-container {
+      width: 200px;
+      height: 200px;
+      background:
+        linear-gradient(45deg, var(--sr-gray-100) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--sr-gray-100) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--sr-gray-100) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--sr-gray-100) 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+      background-color: white;
+      border-radius: var(--sr-border-radius);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      border: 1px solid var(--sr-gray-200);
+      box-shadow: var(--sr-shadow-sm);
+    }
+
+    .svg-recolor__preview {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .svg-recolor__preview svg {
+      max-width: 100%;
+      max-height: 100%;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
+
+    .svg-recolor__mode-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .svg-recolor__mode-btn {
+      padding: 0.625rem 1rem;
+      border: 1px solid var(--sr-gray-200);
+      border-radius: var(--sr-border-radius);
+      background: white;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--sr-gray-600);
+      transition: all 0.2s ease;
+    }
+
+    .svg-recolor__mode-btn:hover {
+      border-color: var(--sr-primary-light);
+      color: var(--sr-primary);
+      background: var(--sr-primary-lighter);
+    }
+
+    .svg-recolor__mode-btn--active {
+      background: var(--sr-primary);
+      color: white;
+      border-color: var(--sr-primary);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    .svg-recolor__mode-btn--active:hover {
+      background: var(--sr-primary-hover);
+      color: white;
+    }
+
+    .svg-recolor__hint {
+      font-size: 0.8125rem;
+      color: var(--sr-gray-400);
+      margin-top: 0.5rem;
+      line-height: 1.4;
+    }
+
+    .svg-recolor__divider {
+      height: 1px;
+      background: var(--sr-gray-100);
+      margin: 0 -2.5rem 1.5rem;
+    }
+
+    .svg-recolor__actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .svg-recolor__btn {
+      padding: 0.875rem 1.5rem;
+      border: none;
+      border-radius: var(--sr-border-radius);
+      font-size: 0.9375rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .svg-recolor__btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .svg-recolor__btn--primary {
+      background: linear-gradient(135deg, var(--sr-primary-light) 0%, var(--sr-primary) 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    .svg-recolor__btn--primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--sr-primary) 0%, var(--sr-primary-hover) 100%);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .svg-recolor__btn--secondary {
+      background: white;
+      color: var(--sr-gray-700);
+      border: 1px solid var(--sr-gray-200);
+    }
+
+    .svg-recolor__btn--secondary:hover:not(:disabled) {
+      background: var(--sr-gray-50);
+      border-color: var(--sr-gray-300);
+    }
+
+    .svg-recolor__btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .svg-recolor__filename {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--sr-gray-600);
+      margin-top: 1rem;
+      padding: 0.5rem 0.875rem;
+      background: white;
+      border-radius: 20px;
+      box-shadow: var(--sr-shadow-sm);
+      border: 1px solid var(--sr-gray-200);
+    }
+
+    .svg-recolor__filename svg {
+      width: 14px;
+      height: 14px;
+      color: var(--sr-primary);
+    }
+
+    .svg-recolor__empty {
+      color: var(--sr-gray-400);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    @media (max-width: 600px) {
+      .svg-recolor {
+        margin: 20px;
+        padding: 1.5rem;
+      }
+      .svg-recolor__main-row {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .svg-recolor__preview-container {
+        width: 100%;
+        max-width: 200px;
+        height: 180px;
+        margin: 0 auto;
+      }
+      .svg-recolor__actions {
+        flex-direction: column;
+      }
+      .svg-recolor__btn {
+        width: 100%;
+        justify-content: center;
+      }
+      .svg-recolor__divider {
+        margin-left: -1.5rem;
+        margin-right: -1.5rem;
+      }
+    }
+  </style>
+
+  <div class="svg-recolor__header">
+    <div class="svg-recolor__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+      </svg>
+    </div>
+    <h2 class="svg-recolor__title">SVG Recolor Tool</h2>
+    <p class="svg-recolor__subtitle">Быстро измените цвет вашей SVG-иконки</p>
+  </div>
+
+  <div class="svg-recolor__upload-zone" id="sr-dropzone">
+    <div class="svg-recolor__upload-content">
+      <div class="svg-recolor__upload-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="svg-recolor__upload-text">
+        Перетащите SVG сюда или <strong>выберите файл</strong>
+      </div>
+      <div class="svg-recolor__upload-hint">Поддерживаются файлы .svg</div>
+    </div>
+    <input type="file" id="sr-file-input" class="svg-recolor__file-input" accept=".svg,image/svg+xml">
+    <div id="sr-filename" class="svg-recolor__filename" style="display: none;"></div>
+  </div>
+
+  <div class="svg-recolor__main-row">
+    <div class="svg-recolor__controls">
+      <div class="svg-recolor__group">
+        <label class="svg-recolor__label">Режим перекраски</label>
+        <div class="svg-recolor__mode-group">
+          <button class="svg-recolor__mode-btn svg-recolor__mode-btn--active" data-mode="fill">Fill</button>
+          <button class="svg-recolor__mode-btn" data-mode="stroke">Stroke</button>
+          <button class="svg-recolor__mode-btn" data-mode="both">Оба</button>
+          <button class="svg-recolor__mode-btn" data-mode="all">Всё в один</button>
+        </div>
+        <div class="svg-recolor__hint">Fill — заливка, Stroke — обводка, Всё в один — полностью однотонный</div>
+      </div>
+
+      <div class="svg-recolor__group">
+        <label class="svg-recolor__label" for="sr-color">Новый цвет</label>
+        <div class="svg-recolor__color-group">
+          <div class="svg-recolor__color-picker-wrapper">
+            <input type="color" id="sr-color" class="svg-recolor__color-picker" value="#2563eb">
+          </div>
+          <input type="text" id="sr-color-text" class="svg-recolor__input" value="#2563EB">
+        </div>
+      </div>
+    </div>
+
+    <div class="svg-recolor__preview-section">
+      <div class="svg-recolor__preview-label">Превью</div>
+      <div class="svg-recolor__preview-container">
+        <div id="sr-preview" class="svg-recolor__preview">
+          <span class="svg-recolor__empty">SVG не загружен</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="svg-recolor__divider"></div>
+
+  <div class="svg-recolor__actions">
+    <button id="sr-download-svg" class="svg-recolor__btn svg-recolor__btn--primary" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Скачать SVG
+    </button>
+    <button id="sr-download-png" class="svg-recolor__btn svg-recolor__btn--secondary" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+      Скачать PNG
+    </button>
+    <button id="sr-reset" class="svg-recolor__btn svg-recolor__btn--secondary" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10"/>
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+      </svg>
+      Сбросить
+    </button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const elements = {
+    dropzone: document.getElementById('sr-dropzone'),
+    fileInput: document.getElementById('sr-file-input'),
+    filename: document.getElementById('sr-filename'),
+    colorPicker: document.getElementById('sr-color'),
+    colorText: document.getElementById('sr-color-text'),
+    preview: document.getElementById('sr-preview'),
+    downloadSvg: document.getElementById('sr-download-svg'),
+    downloadPng: document.getElementById('sr-download-png'),
+    resetBtn: document.getElementById('sr-reset'),
+    modeBtns: document.querySelectorAll('.svg-recolor__mode-btn')
+  };
+
+  let originalSvg = null;
+  let currentSvg = null;
+  let currentFilename = 'icon';
+  let currentMode = 'fill';
+
+  // Drag & drop
+  ['dragenter', 'dragover'].forEach(evt => {
+    elements.dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      elements.dropzone.classList.add('svg-recolor__upload-zone--dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(evt => {
+    elements.dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      elements.dropzone.classList.remove('svg-recolor__upload-zone--dragover');
+    });
+  });
+
+  elements.dropzone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'image/svg+xml') {
+      loadFile(file);
+    }
+  });
+
+  elements.dropzone.addEventListener('click', () => elements.fileInput.click());
+  elements.fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) loadFile(e.target.files[0]);
+  });
+
+  function loadFile(file) {
+    currentFilename = file.name.replace('.svg', '');
+    elements.filename.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${file.name}`;
+    elements.filename.style.display = 'inline-flex';
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      originalSvg = e.target.result;
+      currentSvg = originalSvg;
+      applyColor();
+      enableButtons(true);
+    };
+    reader.readAsText(file);
+  }
+
+  function enableButtons(enabled) {
+    elements.downloadSvg.disabled = !enabled;
+    elements.downloadPng.disabled = !enabled;
+    elements.resetBtn.disabled = !enabled;
+  }
+
+  // Mode buttons
+  elements.modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      elements.modeBtns.forEach(b => b.classList.remove('svg-recolor__mode-btn--active'));
+      btn.classList.add('svg-recolor__mode-btn--active');
+      currentMode = btn.dataset.mode;
+      if (originalSvg) applyColor();
+    });
+  });
+
+  // Color sync
+  elements.colorPicker.addEventListener('input', () => {
+    elements.colorText.value = elements.colorPicker.value;
+    if (originalSvg) applyColor();
+  });
+
+  elements.colorText.addEventListener('input', () => {
+    const val = elements.colorText.value;
+    if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(val)) {
+      elements.colorPicker.value = val;
+      if (originalSvg) applyColor();
+    }
+  });
+
+  function applyColor() {
+    const color = elements.colorPicker.value;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(originalSvg, 'image/svg+xml');
+    const svg = doc.querySelector('svg');
+    
+    if (!svg) {
+      elements.preview.innerHTML = '<span class="svg-recolor__empty">Ошибка парсинга SVG</span>';
+      return;
+    }
+
+    // Remove width/height for responsive preview, keep viewBox
+    if (!svg.getAttribute('viewBox')) {
+      const w = svg.getAttribute('width') || 100;
+      const h = svg.getAttribute('height') || 100;
+      svg.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
+    }
+    svg.removeAttribute('width');
+    svg.removeAttribute('height');
+
+    const allElements = svg.querySelectorAll('*');
+    
+    allElements.forEach(el => {
+      const tagName = el.tagName.toLowerCase();
+      
+      // Skip non-visual elements
+      if (['defs', 'title', 'desc', 'metadata', 'style', 'clipPath', 'mask', 'pattern', 'linearGradient', 'radialGradient', 'stop'].includes(tagName)) {
+        return;
+      }
+
+      switch(currentMode) {
+        case 'fill':
+          // Change fill only if it exists and isn't 'none'
+          if (el.getAttribute('fill') !== 'none') {
+            el.setAttribute('fill', color);
+          }
+          // Also handle style attribute
+          if (el.style.fill && el.style.fill !== 'none') {
+            el.style.fill = color;
+          }
+          break;
+          
+        case 'stroke':
+          // Change stroke only if it exists and isn't 'none'
+          if (el.getAttribute('stroke') && el.getAttribute('stroke') !== 'none') {
+            el.setAttribute('stroke', color);
+          }
+          if (el.style.stroke && el.style.stroke !== 'none') {
+            el.style.stroke = color;
+          }
+          break;
+          
+        case 'both':
+          if (el.getAttribute('fill') !== 'none') {
+            el.setAttribute('fill', color);
+          }
+          if (el.getAttribute('stroke') && el.getAttribute('stroke') !== 'none') {
+            el.setAttribute('stroke', color);
+          }
+          if (el.style.fill && el.style.fill !== 'none') {
+            el.style.fill = color;
+          }
+          if (el.style.stroke && el.style.stroke !== 'none') {
+            el.style.stroke = color;
+          }
+          break;
+          
+        case 'all':
+          // Force everything to one color
+          el.setAttribute('fill', color);
+          el.removeAttribute('stroke');
+          el.style.fill = color;
+          el.style.stroke = '';
+          break;
+      }
+    });
+
+    // Handle SVG root fill if needed
+    if (currentMode === 'fill' || currentMode === 'both' || currentMode === 'all') {
+      if (svg.getAttribute('fill') !== 'none') {
+        svg.setAttribute('fill', color);
+      }
+    }
+
+    currentSvg = new XMLSerializer().serializeToString(svg);
+    elements.preview.innerHTML = currentSvg;
+  }
+
+  // Download SVG
+  elements.downloadSvg.addEventListener('click', () => {
+    const blob = new Blob([currentSvg], { type: 'image/svg+xml' });
+    downloadBlob(blob, `${currentFilename}-recolored.svg`);
+  });
+
+  // Download PNG
+  elements.downloadPng.addEventListener('click', () => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(currentSvg, 'image/svg+xml');
+    const svg = doc.querySelector('svg');
+    
+    // Set size for PNG export
+    const size = 512;
+    svg.setAttribute('width', size);
+    svg.setAttribute('height', size);
+    
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      
+      canvas.toBlob(blob => {
+        downloadBlob(blob, `${currentFilename}-recolored.png`);
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    };
+    img.src = url;
+  });
+
+  // Reset
+  elements.resetBtn.addEventListener('click', () => {
+    currentSvg = originalSvg;
+    applyColor();
+  });
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+})();
+</script>
+</body>
+</html>
